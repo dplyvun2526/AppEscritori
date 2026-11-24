@@ -23,6 +23,8 @@ public class MovilController : ControllerBaseDatos
         public int Errores { get; set; }
         public int Ayudas { get; set; }
         public int Aciertos { get; set; }
+        public int? RespMediaMs { get; set; }         // tiempo medio de respuesta en ms
+        public string? Dificultad { get; set; }       // "facil"/"dificil": de momento no se guarda (la BD no tiene columna)
         public bool Completada { get; set; } = true;
         public bool Simulada { get; set; }            // true para datos de prueba
     }
@@ -57,15 +59,15 @@ public class MovilController : ControllerBaseDatos
 
             INSERT INTO dbo.sesion
                 (sesion_id, participante_id, juego_id, schema_version, iniciada_en, iniciada_utc, fecha_local,
-                 duracion_s, puntuacion, nivel_alcanzado, intentos, errores, ayudas, completada, abandonada, simulada, aciertos)
+                 duracion_s, puntuacion, nivel_alcanzado, intentos, errores, ayudas, completada, abandonada, simulada, aciertos, resp_media_ms)
             VALUES
                 (@sesion, @pid, 1, 1, @inicioLocal, @inicioUtc, CAST(@inicioLocal AS date),
-                 @dur, @punt, @nivel, @intentos, @errores, @ayudas, @completada, 0, @simulada, @aciertos);
+                 @dur, @punt, @nivel, @intentos, @errores, @ayudas, @completada, 0, @simulada, @aciertos, @resp);
 
             INSERT INTO dbo.nivel_sesion
-                (sesion_id, nivel, completado, duracion_ms, intentos, errores, ayudas, aciertos)
+                (sesion_id, nivel, completado, duracion_ms, intentos, errores, ayudas, aciertos, resp_media_ms)
             VALUES
-                (@sesion, @nivel, @completada, @dur * 1000, @intentos, @errores, @ayudas, @aciertos);
+                (@sesion, @nivel, @completada, @dur * 1000, @intentos, @errores, @ayudas, @aciertos, @resp);
 
             COMMIT;";
 
@@ -85,7 +87,8 @@ public class MovilController : ControllerBaseDatos
                 new SqlParameter("@ayudas", d.Ayudas),
                 new SqlParameter("@completada", d.Completada),
                 new SqlParameter("@simulada", d.Simulada),
-                new SqlParameter("@aciertos", d.Aciertos));
+                new SqlParameter("@aciertos", d.Aciertos),
+                new SqlParameter("@resp", (object?)d.RespMediaMs ?? DBNull.Value));
         }
         catch (SqlException ex)
         {
